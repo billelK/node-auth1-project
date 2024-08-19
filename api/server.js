@@ -1,11 +1,17 @@
 const express = require("express");
-const session = require("express-session")
+const session = require('express-session');
+const {ConnectSessionKnexStore} = require('connect-session-knex')
 const helmet = require("helmet");
 const cors = require("cors");
+
+const knex = require("../data/db-config")
 
 const usersRouter = require("./users/users-router")
 const authRouter = require("./auth/auth-router")
 
+
+// const connectSessionKnex = require('connect-session-knex');
+// console.log(connectSessionKnex); 
 /**
   Do what needs to be done to support sessions with the `express-session` package!
   To respect users' privacy, do NOT send them a cookie unless they log in.
@@ -21,6 +27,14 @@ const authRouter = require("./auth/auth-router")
 
 const server = express();
 
+const store = new ConnectSessionKnexStore({
+  knex: knex,
+  tablename: 'sessions', // Table name to store sessions
+  createTable: true, // Create table if it does not exist
+  clearInterval: 1000 * 60, // Clear old sessions every minute
+  sidfieldname: 'sid'
+});
+
 server.use(helmet());
 server.use(express.json());
 server.use(cors());
@@ -28,6 +42,7 @@ server.use(
   session({
     name: "chocolatechip",
     secret: "lets try this",
+    store: store,
     cookie: {
       maxAge: 1000 * 30,
       secure: false
